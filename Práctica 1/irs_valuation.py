@@ -98,23 +98,24 @@ class InterestRateSwap:
         fixed_npv = np.sum(self.coupon * self.notional * delta_fixed * df_interp)
         print('Fixed NPV:', fixed_npv)
         # FLOAT LEG
-        aux2 = sum(self.valuation_date >= float_initial_date)
-        delta_float = (float_final_date[(aux2 - 1):] - float_initial_date[(aux2 - 1):]) / self.act
-        delta_float[(aux2 - 1)] = (float_final_date[(aux2 - 1)] - self.valuation_date) / self.act
+        aux2 = sum(self.valuation_date >= float_final_date)
+        delta_float = (float_final_date[aux2:] - float_initial_date[aux2:]) / self.act
+        delta_float[aux2] = (float_final_date[aux2] - self.valuation_date) / self.act
         # From time series to float class
         delta_float = delta_float.dt.seconds + delta_float.dt.days * (24 * 60 * 60)
         delta_float = delta_float / (24 * 60 * 60)
-        df_interp_libor = np.interp(float_final_date[aux2 - 2:], libor_date, libor_discount_factor)
+        df_interp_libor = np.interp(float_final_date[aux2 - 1:], libor_date, libor_discount_factor)
         niter = len(df_interp_libor) - 1
         forward = np.zeros(niter)
         float_discount_factor = np.zeros(niter)
         for i in range(0, niter):
-            forward[i] = ((df_interp_libor[i] / df_interp_libor[i+1]) - 1) / delta_float[aux2 - 1 + i]
-            float_discount_factor[i] = (1 - self.coupon * np.sum(delta_float[aux2 - 1 + i] * df_interp_libor[i])) / \
-                                       (1 + delta_float[aux2 - 1 + i] * self.coupon)
-        fix_date = self.valuation_date - dateutil.relativedelta.relativedelta(months=3)
-        index = fixings_date[fixings_date == fix_date].index[0]
-        forward[0] = fixings_rates[index]
+            forward[i] = ((df_interp_libor[i] / df_interp_libor[i+1]) - 1) / delta_float[aux2 + i]
+            float_discount_factor[i] = (1 - self.coupon * np.sum(delta_float[aux2 + i] * df_interp_libor[i])) / \
+                                       (1 + delta_float[aux2 + i] * self.coupon)
+        index = np.zeros(aux2)
+        for j in range(0, aux2):
+            index[j] = fixings_date[fixings_date == float_initial_date.values[j]].index[0]
+            forward[j] = fixings_rates[index[j]]
         float_npv = sum(forward * (-self.notional) * delta_float * float_discount_factor)
         print('Float NPV:', float_npv)
         return fixed_npv + float_npv
