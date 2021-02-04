@@ -88,13 +88,13 @@ class InterestRateSwap:
             IRS' net present value (NPV). Also we show the fixed and float NPV.
         """
         # FIXED LEG
-        aux = sum(self.valuation_date >= fixed_initial_date)
-        delta_fixed = (fixed_final_date[(aux - 1):] - fixed_initial_date[(aux - 1):]) / self.act
-        delta_fixed[(aux - 1)] = (fixed_final_date[(aux - 1)] - self.valuation_date) / self.act
+        aux = sum(self.valuation_date >= fixed_final_date)
+        delta_fixed = (fixed_final_date[aux:] - fixed_initial_date[aux:]) / self.act
+        delta_fixed[aux] = (fixed_final_date[aux] - self.valuation_date) / self.act
         # From time series to float class
         delta_fixed = delta_fixed.dt.seconds + delta_fixed.dt.days * (24 * 60 * 60)
         delta_fixed = delta_fixed / (24 * 60 * 60)
-        df_interp = np.interp(fixed_final_date[(aux - 1):], tenor_date, risk_free_discount_factor)
+        df_interp = np.interp(fixed_final_date[aux:], tenor_date, risk_free_discount_factor)
         fixed_npv = np.sum(self.coupon * self.notional * delta_fixed * df_interp)
         print('Fixed NPV:', fixed_npv)
         # FLOAT LEG
