@@ -4,6 +4,7 @@
 # 2021
 import numpy as np
 from datetime import date
+import dateutil.relativedelta
 
 
 class InterestRateSwap:
@@ -111,9 +112,9 @@ class InterestRateSwap:
             forward[i] = ((df_interp_libor[i] / df_interp_libor[i+1]) - 1) / delta_float[aux2 - 1 + i]
             float_discount_factor[i] = (1 - self.coupon * np.sum(delta_float[aux2 - 1 + i] * df_interp_libor[i])) / \
                                        (1 + delta_float[aux2 - 1 + i] * self.coupon)
-        aux3 = sum(self.valuation_date >= fixings_date)
-        fixings = fixings_rates[aux3 - 1:]
-        forward[0:len(fixings)] = fixings
+        fix_date = self.valuation_date - dateutil.relativedelta.relativedelta(months=3)
+        index = fixings_date[fixings_date == fix_date].index[0]
+        forward[0] = fixings_rates[index]
         float_npv = sum(forward * (-self.notional) * delta_float * float_discount_factor)
         print('Float NPV:', float_npv)
         return fixed_npv + float_npv
