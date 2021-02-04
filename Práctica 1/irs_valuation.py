@@ -107,11 +107,14 @@ class InterestRateSwap:
         df_interp_libor = np.interp(float_final_date[aux2 - 1:], libor_date, libor_discount_factor)
         niter = len(df_interp_libor) - 1
         forward = np.zeros(niter)
-        float_discount_factor = np.zeros(niter)
         for i in range(0, niter):
             forward[i] = ((df_interp_libor[i] / df_interp_libor[i+1]) - 1) / delta_float[aux2 + i]
-            float_discount_factor[i] = (1 - self.coupon * np.sum(delta_float[aux2 + i] * df_interp_libor[i])) / \
-                                       (1 + delta_float[aux2 + i] * self.coupon)
+        float_discount_factor = np.zeros(niter)
+        float_discount_factor[0] = 1 / (1 + delta_float[aux2] * self.coupon)
+        my_sum = np.zeros(niter-1)
+        for k in range(0, niter-1):
+            my_sum[k] = delta_float[aux2 + k] * float_discount_factor[k]
+            float_discount_factor[k + 1] = (1 - self.coupon * sum(my_sum)) / (1 + delta_float[aux2 + k] * self.coupon)
         index = np.zeros(aux2)
         for j in range(0, aux2):
             index[j] = fixings_date[fixings_date == float_initial_date.values[j]].index[0]
