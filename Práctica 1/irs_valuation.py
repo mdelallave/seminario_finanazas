@@ -109,16 +109,22 @@ class InterestRateSwap:
         forward = np.zeros(niter)
         for i in range(0, niter):
             forward[i] = ((df_interp_libor[i] / df_interp_libor[i+1]) - 1) / delta_float[aux2 + i]
-        float_discount_factor = np.zeros(niter)
-        float_discount_factor[0] = 1 / (1 + delta_float[aux2] * self.coupon)
-        my_sum = np.zeros(niter-1)
-        for k in range(0, niter-1):
-            my_sum[k] = delta_float[aux2 + k] * float_discount_factor[k]
-            float_discount_factor[k + 1] = (1 - self.coupon * sum(my_sum)) / (1 + delta_float[aux2 + k] * self.coupon)
         index = np.zeros(aux2)
         for j in range(0, aux2):
             index[j] = fixings_date[fixings_date == float_initial_date.values[j]].index[0]
             forward[j] = fixings_rates[index[j]]
+        float_discount_factor = np.zeros(niter)
+        float_discount_factor[0] = 1 / (1 + delta_float[aux2] * self.coupon)
+        my_sum = np.zeros(niter - 1)
+        delta_n = [0, delta_float[aux2]]
+        for k in range(0, niter - 1):
+            my_sum[k] = delta_float[aux2 + k] * float_discount_factor[k]
+            float_discount_factor[k + 1] = (1 - self.coupon * sum(my_sum)) / (1 + delta_n[k + 1] * self.coupon)
+            delta_n = (float_final_date[aux2:(aux2 + k + 1)] - float_initial_date[aux2]) / self.act
+            delta_n = delta_n.dt.seconds + delta_n.dt.days * (24 * 60 * 60)
+            delta_n = (delta_n / (24 * 60 * 60))
+            # Alternative form with delta_n almost constant
+            # float_discount_factor[k + 1] = (1 - self.coupon * sum(my_sum)) / (1 + delta_float[aux2 + k] * self.coupon)
         float_npv = sum(forward * (-self.notional) * delta_float * float_discount_factor)
         print('Float NPV:', float_npv)
         return fixed_npv + float_npv
