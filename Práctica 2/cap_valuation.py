@@ -105,8 +105,7 @@ class cap:
              (volatility_strike[2:] * np.sqrt(delta))
         N1_cdf = norm.cdf(d1, 0, 1)
         N2_cdf = norm.cdf(d2, 0, 1)
-        caplets = ((forward - shift) * N1_cdf - (self.strike - shift) * N2_cdf) * self.notional * \
-                  df_interp_libor[1:]
+        caplets = ((forward - shift) * N1_cdf - (self.strike - shift) * N2_cdf) * self.notional * df_interp_libor[1:]
         return sum(caplets), caplets
 
     def implied_volatility(self, initial_date: date,
