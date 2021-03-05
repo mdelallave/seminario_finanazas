@@ -51,11 +51,8 @@ maturity_date = pd.to_datetime(maturity_date)
 shift = 0.03  # Lognormal model shift
 
 # Implied volatility interpolation
-vol_interp_1 = np.interp(final_date, volatilities.date, volatilities.loc[:, "1.00"] / 100)
-vol_interp_2 = np.interp(final_date, volatilities.date, volatilities.loc[:, "1.50"] / 100)
-# vol_interp_3 =
-
-volatility_strike = vol_interp_1 * 1.1
+vol_interp = np.interp(final_date, volatilities.date, volatilities.loc[:, "1.00"] / 100)
+volatility_strike = vol_interp * 1.1  # 1.1% strike
 
 # Valuation
 cap = cap(notional, X, valuation_date, maturity_date, convention)
